@@ -1,0 +1,30 @@
+name: PR policy
+
+# Branch protection cannot restrict which branch a pull request comes from, so the
+# "master only accepts pull requests from develop" rule is enforced here and wired up
+# as a required status check on master.
+on:
+  pull_request:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  verify-source-branch:
+    name: Verify PR source branch
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Ensure the pull request originates from develop
+        env:
+          # Passed through the environment rather than interpolated into the script,
+          # because a branch name is attacker controlled on fork pull requests.
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          if [ "$HEAD_REF" != "develop" ]; then
+            echo "::error::Pull requests into master must come from develop, but this one comes from '$HEAD_REF'."
+            exit 1
+          fi
+          echo "Source branch '$HEAD_REF' is allowed to target master."

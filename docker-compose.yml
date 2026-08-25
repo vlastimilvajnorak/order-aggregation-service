@@ -1,0 +1,23 @@
+services:
+  order-aggregation-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: order-aggregation-service:local
+    container_name: order-aggregation-service
+    ports:
+      - "8080:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_HTTP_PORTS: "8080"
+      # Double underscore is the configuration path separator for environment variables.
+      OrderAggregation__DispatchEnabled: "false"
+      OrderAggregation__DispatchInterval: "00:00:30"
+      OrderAggregation__MaxLinesPerRequest: "1000"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 3s
+      start_period: 10s
+      retries: 3
+    restart: unless-stopped

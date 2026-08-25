@@ -1,0 +1,183 @@
+@page "/dashboard"
+@rendermode InteractiveServer
+@implements IAsyncDisposable
+
+@using System.Globalization
+@using Microsoft.Extensions.Diagnostics.HealthChecks
+@using OrderAggregationService.Models
+@using OrderAggregationService.Services
+
+@inject IOrderAggregator Aggregator
+@inject HealthCheckService HealthChecks
+@inject IHostEnvironment HostEnvironment
+
+<PageTitle>Dashboard - Order Aggregation Service</PageTitle>
+
+<h1>Service dashboard</h1>
+
+<p class="text-body-secondary">
+    Environment: <strong>@HostEnvironment.EnvironmentName</strong>
+    @if (RendererInfo.IsInteractive)
+    {
+        <span> &middot; refreshing every @(RefreshInterval.TotalSeconds.ToString("0", CultureInfo.InvariantCulture)) s</span>
+    }
+</p>
+
+<div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-3 my-3">
+    <div class="col">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="text-body-secondary small text-uppercase">Status</div>
+                <div class="fs-4">
+                    <span class="badge @StatusCssClass">@_healthStatus</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="text-body-secondary small text-uppercase">Products tracked</div>
+                <div class="fs-4">@(_snapshot?.ProductCount ?? 0)</div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="text-body-secondary small text-uppercase">Units pending</div>
+                <div class="fs-4">@(_snapshot?.TotalQuantity ?? 0)</div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="text-body-secondary small text-uppercase">Batches accepted</div>
+                <div class="fs-4">@(_snapshot?.AcceptedBatchCount ?? 0)</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="d-flex align-items-center gap-3 my-3">
+    <button class="btn btn-primary btn-sm" @onclick="RefreshAsync" disabled="@(!RendererInfo.IsInteractive)">
+        Refresh now
+    </button>
+    @if (_snapshot is not null)
+    {
+        <span class="text-body-secondary small">
+            Generated at @(_snapshot.GeneratedAtUtc.UtcDateTime.ToString("u", CultureInfo.InvariantCulture))
+        </span>
+    }
+</div>
+
+<h2 class="h4">Aggregated products</h2>
+
+@if (_snapshot is null || _snapshot.Items.Count == 0)
+{
+    <p class="text-body-secondary">
+        Nothing aggregated yet. Send a batch to <code>POST /api/orders</code> to see it appear here.
+    </p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-sm table-striped align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Product</th>
+                    <th scope="col" class="text-end">Total quantity</th>
+                    <th scope="col" class="text-end">Lines</th>
+                    <th scope="col">First seen (UTC)</th>
+                    <th scope="col">Last updated (UTC)</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in _snapshot.Items)
+                {
+                    <tr>
+                        <td><code>@item.ProductId</code></td>
+                        <td class="text-end">@item.TotalQuantity</td>
+                        <td class="text-end">@item.LineCount</td>
+                        <td>@(item.FirstSeenUtc.UtcDateTime.ToString("u", CultureInfo.InvariantCulture))</td>
+                        <td>@(item.LastUpdatedUtc.UtcDateTime.ToString("u", CultureInfo.InvariantCulture))</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    private static readonly TimeSpan RefreshInterval = TimeSpan.FromSeconds(2);
+
+    private readonly CancellationTokenSource _cancellation = new();
+
+    private AggregationSnapshot? _snapshot;
+    private HealthStatus _healthStatus = HealthStatus.Degraded;
+    private PeriodicTimer? _timer;
+    private Task? _refreshLoop;
+
+    private string StatusCssClass => _healthStatus switch
+    {
+        HealthStatus.Healthy => "text-bg-success",
+        HealthStatus.Degraded => "text-bg-warning",
+        _ => "text-bg-danger",
+    };
+
+    protected override async Task OnInitializedAsync() => await RefreshAsync();
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender && RendererInfo.IsInteractive)
+        {
+            _timer = new PeriodicTimer(RefreshInterval);
+            _refreshLoop = RunRefreshLoopAsync();
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await _cancellation.CancelAsync();
+        _timer?.Dispose();
+
+        if (_refreshLoop is not null)
+        {
+            try
+            {
+                await _refreshLoop;
+            }
+            catch (OperationCanceledException)
+            {
+                // Expected while the component is being torn down.
+            }
+        }
+
+        _cancellation.Dispose();
+    }
+
+    private async Task RunRefreshLoopAsync()
+    {
+        try
+        {
+            while (_timer is not null && await _timer.WaitForNextTickAsync(_cancellation.Token))
+            {
+                await RefreshAsync();
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Expected while the component is being torn down.
+        }
+    }
+
+    private async Task RefreshAsync()
+    {
+        _snapshot = await Aggregator.GetSnapshotAsync(_cancellation.Token);
+
+        var report = await HealthChecks.CheckHealthAsync(_cancellation.Token);
+        _healthStatus = report.Status;
+    }
+}

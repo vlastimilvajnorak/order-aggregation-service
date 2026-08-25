@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/OrderAggregationService/OrderAggregationService.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/OrderAggregationService.Tests/OrderAggregationService.Tests.csproj" />
+  </Folder>
+</Solution>

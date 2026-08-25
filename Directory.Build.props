@@ -1,0 +1,48 @@
+<Project>
+
+  <!--
+    Properties shared by every project in the repository.
+    The target framework stays declared explicitly in each project file.
+  -->
+
+  <PropertyGroup Label="Language">
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Build quality">
+    <!-- Our own code must build clean. -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!--
+      Exceptions for external tooling we do not control:
+      NU1901-NU1904 are NuGet audit advisories raised by feed metadata, which can
+      appear without any change to this repository and must not break the build.
+      NETSDK1057 is emitted when building from a non-release SDK.
+      CS1591 would require XML comments on every public member; documentation
+      files are still generated so OpenAPI can pick up the comments we do write.
+    -->
+    <WarningsNotAsErrors>NU1901;NU1902;NU1903;NU1904;NETSDK1057</WarningsNotAsErrors>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Reproducible builds">
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+    <EnableDefaultNoneItems>true</EnableDefaultNoneItems>
+    <NuGetAuditMode>direct</NuGetAuditMode>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Packaging">
+    <IsPackable>false</IsPackable>
+    <Authors>vlastimilvajnorak</Authors>
+    <Product>Order Aggregation Service</Product>
+    <RepositoryUrl>https://github.com/vlastimilvajnorak/order-aggregation-service</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+
+</Project>

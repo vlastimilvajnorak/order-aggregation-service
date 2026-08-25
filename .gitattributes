@@ -1,0 +1,22 @@
+# Normalize every text file to LF in the repository and in the working tree.
+# .editorconfig declares end_of_line = lf, so a CRLF checkout would make
+# "dotnet format --verify-no-changes" fail on a fresh clone under Windows.
+* text=auto eol=lf
+
+# Windows shell scripts genuinely need CRLF.
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Binary assets must never be normalized.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.pdf binary
+*.zip binary
+*.dll binary
+*.exe binary
+*.snk binary
