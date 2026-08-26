@@ -284,7 +284,7 @@ uses the single-line readable formatter. Log messages are generated at compile t
 
 | Branch | Role | Rules |
 | --- | --- | --- |
-| `develop` | Default branch, integration target | Changes only via pull request, Copilot code review is requested automatically, all review threads must be resolved, CI must pass |
+| `develop` | Default branch, integration target | Changes only via pull request, no approvals required, all review threads must be resolved, CI must pass |
 | `master` | Stable branch | Changes only via pull request **from `develop`**, no review required, CI and the source-branch check must pass |
 | `main` | Not used | Creation and updates are blocked by a repository ruleset |
 
