@@ -28,8 +28,9 @@ matches the task instead of guessing; do not load all of them for every change.
 | --- | --- |
 | `git-workflow` | Staging, branching, checkout, pull, rebase, merge, conflicts, push, worktrees |
 | `conventional-commits` | Writing or fixing a commit message or a pull request title |
-| `dotnet-10-development` | Changing `.cs`, `.csproj`, `.slnx`, `Directory.*.props`, `Program.cs`, endpoints, services, packages |
-| `dotnet-naming-conventions` | Creating or renaming any C# symbol, file or project |
+| `dotnet-10-development` | Changing `.cs`, `.csproj`, `.slnx`, `Directory.*.props`, `Program.cs`, services, packages |
+| `rest-api-design` | Adding or changing a route, verb, status code, error response, API contract or the OpenAPI document |
+| `dotnet-naming-conventions` | Creating or renaming any C# symbol, Razor component, file or project |
 | `blazor-development` | Changing `.razor` files, `Components/`, UI state, `wwwroot/` |
 | `object-oriented-design` | Introducing or reshaping a type, assigning responsibilities, refactoring |
 | `dotnet-testing` | Adding, changing or debugging tests, or deciding what level to test at |

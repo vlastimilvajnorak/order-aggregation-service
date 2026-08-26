@@ -41,8 +41,9 @@ the next sync and fail CI in the meantime.
 | --- | --- |
 | `git-workflow` | Staging, branching, pull, rebase, merge, conflicts, push, worktrees |
 | `conventional-commits` | Writing or fixing a commit message or PR title |
-| `dotnet-10-development` | `.cs`, `.csproj`, `.slnx`, `Directory.*.props`, endpoints, services, packages |
-| `dotnet-naming-conventions` | Creating or renaming a C# symbol, file or project |
+| `dotnet-10-development` | `.cs`, `.csproj`, `.slnx`, `Directory.*.props`, services, packages |
+| `rest-api-design` | Routes, verbs, status codes, error responses, API contracts, OpenAPI |
+| `dotnet-naming-conventions` | Creating or renaming a C# symbol, Razor component, file or project |
 | `blazor-development` | `.razor` files, `Components/`, UI state, `wwwroot/` |
 | `object-oriented-design` | Introducing or reshaping a type, refactoring, design review |
 | `dotnet-testing` | Adding, changing or debugging tests |

@@ -15,6 +15,7 @@ skill's `description`, and you can invoke one directly:
 /git-workflow
 /conventional-commits
 /dotnet-10-development
+/rest-api-design
 /dotnet-naming-conventions
 /blazor-development
 /object-oriented-design

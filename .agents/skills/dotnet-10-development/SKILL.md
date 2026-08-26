@@ -1,6 +1,6 @@
 ---
 name: dotnet-10-development
-description: Production rules for the .NET 10 and ASP.NET Core code in this repository - target framework and language level, central package management, dependency injection lifetimes, hosted services, options with startup validation, structured logging, cancellation and async correctness, TimeProvider, ProblemDetails, health checks, OpenAPI, and the required clean Release build. Use when adding or changing .cs files, csproj, slnx, Directory.Build.props, Directory.Packages.props, Program.cs, endpoints, services, configuration or NuGet packages. Do not use for naming decisions, Razor components or test authoring; those have their own skills.
+description: Production rules for the .NET 10 and ASP.NET Core code in this repository - target framework and language level, central package management, dependency injection lifetimes, hosted services, options with startup validation, structured logging, cancellation and async correctness, TimeProvider, ProblemDetails, health checks, OpenAPI, and the required clean Release build. Use when adding or changing .cs files, csproj, slnx, Directory.Build.props, Directory.Packages.props, Program.cs, services, configuration or NuGet packages. Do not use for the HTTP contract itself such as routes, verbs and status codes, nor for naming decisions, Razor components or test authoring; those have their own skills.
 ---
 
 # .NET 10 development
@@ -101,17 +101,20 @@ application, application to domain, infrastructure to domain.
 - Warning and above for anything that needs action; Information for lifecycle
   events; Debug for per-cycle detail.
 
-## HTTP surface
+## HTTP hosting
 
-- Failures under `/api` return RFC 9457 problem details. Validation failures return
-  `TypedResults.ValidationProblem` with the offending member as the key.
-- Return `TypedResults.*` from handlers and declare the union with
-  `Results<TOk, TProblem>` so OpenAPI metadata is derived from the signature.
-- Keep endpoint handlers thin: validate, delegate, map the result. Business rules
-  belong in `Services/`.
-- Health lives at `/health`; the OpenAPI document at `/openapi/v1.json`.
+Routes, verbs, status codes, error shapes and contracts are the `rest-api-design`
+skill. What belongs here is the hosting side:
+
 - Middleware order in `Program.cs` is load-bearing. Read the whole pipeline before
   inserting anything.
+- The pipeline branches on `/api`: those requests get problem details, everything
+  else gets the Blazor error and not-found pages. A new API route must live under
+  `/api` or it will render HTML on failure.
+- `AddProblemDetails()`, `AddOpenApi()` and the health check registration happen
+  once, in `Program.cs` or `AddOrderAggregation`. Do not re-register them.
+- Keep endpoint handlers thin: validate, delegate, map the result. Business rules
+  belong in `Services/`.
 
 ## Disposal
 
