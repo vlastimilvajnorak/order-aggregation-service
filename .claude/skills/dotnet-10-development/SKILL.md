@@ -22,6 +22,9 @@ application, application to domain, infrastructure to domain.
 
 ## Inspect first
 
+0. `docs/requirements.md` - the authoritative specification, including the
+   20-second hand-over floor, the throughput target and the store-selection rule.
+   Read it before changing behaviour; it also lists what is not implemented yet.
 1. `Directory.Build.props` - shared compiler and analyzer settings
 2. `Directory.Packages.props` - every NuGet version lives here
 3. `src/OrderAggregationService/Program.cs` - composition root and pipeline order
@@ -68,6 +71,21 @@ application, application to domain, infrastructure to domain.
   `stoppingToken.IsCancellationRequested`, and let a failing cycle log and continue
   rather than terminate the loop.
 - Use `PeriodicTimer` with the injected `TimeProvider` for periodic work.
+
+## The hand-over cadence
+
+The 20-second interval between hand-overs is a specified minimum, not a tuning knob:
+
+- Drive it from `PeriodicTimer` with the injected `TimeProvider`, never from
+  `Task.Delay` or a wall-clock comparison.
+- Never add a path that flushes early because a batch looks large, a queue looks
+  full, or a caller asked. A burst inside the window produces exactly one hand-over.
+- The interval stays configurable, but the configured value is validated as
+  greater than zero and the shipped default is the specified 20 seconds.
+- A failing cycle logs and the loop continues. A cycle must not terminate the
+  background service.
+- Whether a failed hand-over may lose the drained batch is a design decision
+  recorded in `docs/requirements.md`. Do not change the delivery guarantee silently.
 
 ## Time
 

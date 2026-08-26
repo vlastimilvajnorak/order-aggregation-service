@@ -23,6 +23,7 @@ If the suite is ever split, keep the same boundaries described below.
 
 ## Inspect first
 
+0. `docs/requirements.md` - the acceptance criteria a test is meant to prove
 1. The existing test file for the type you are changing
 2. `OrderApiFactory.cs` before writing any HTTP test
 3. `FixedTimeProvider.cs` before writing anything time-dependent
@@ -68,6 +69,29 @@ an integration test.
 - Never call `DateTime.UtcNow` or `Task.Delay` to let something happen.
 - Inject `FixedTimeProvider` and call `Advance(...)` to move time.
 - A test must never wait on the wall clock. If a test sleeps, redesign it.
+
+## The hand-over cadence
+
+The 20-second minimum interval is a specified invariant, so it needs a test that
+would fail if someone added an early-flush path:
+
+- Drive the background service with `FixedTimeProvider`, never with a real delay.
+- Assert that no hand-over happens before the interval elapses, that a burst of
+  submissions inside one window produces exactly **one** hand-over, and that the
+  hand-over carries the summed quantities.
+- Assert the payload shape the console output is contracted to produce, not merely
+  that the dispatcher was called.
+- A test that waits 20 real seconds is a defect. So is one that asserts the timer
+  type instead of the observable cadence.
+
+## Load-shaped tests
+
+The service is specified for hundreds of orders per second over hundreds of product
+ids. A test that mirrors that shape belongs in the suite:
+
+- Many concurrent writers, a bounded set of product ids, exact expected totals.
+- Assert correctness under contention, not elapsed time. A throughput assertion on
+  a shared CI runner is flaky by construction and must not gate the build.
 
 ## Concurrency
 

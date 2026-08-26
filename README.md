@@ -83,6 +83,7 @@ Services/OrderDispatchBackgroundService ──▶ Services/IOrderDispatcher
 │   ├── ci.yml                     # Build and test on every push and pull request
 │   └── pr-policy.yml              # Enforces that master only accepts PRs from develop
 ├── docs/
+│   ├── requirements.md            # Authoritative specification and acceptance criteria
 │   └── ai-agent-development.md    # How Codex and Claude Code are configured
 ├── scripts/
 │   └── validate-agent-skills.py   # Validates the skills and syncs the mirror

@@ -7,6 +7,10 @@ description: Design judgement for this repository - encapsulation, cohesion, cou
 
 ## Inspect first
 
+0. `docs/requirements.md` - which seams the specification actually requires, and the
+   design decisions still open. The store must be extensible **and selectable
+   through configuration**; that requirement is why `IOrderAggregator` exists and is
+   not a candidate for removal under YAGNI.
 1. `src/OrderAggregationService/Services/IOrderAggregator.cs` - the seam the whole
    API layer depends on, and the model for a justified abstraction
 2. `src/OrderAggregationService/Services/OrderAggregationServiceCollectionExtensions.cs` -

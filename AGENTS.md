@@ -19,6 +19,27 @@ The flat two-project layout is deliberate for the current scope. Do not split it
 into `Domain` / `Application` / `Infrastructure` projects unless the task asks for
 it. If that split ever happens, project references must point inward only.
 
+## Product requirements
+
+`docs/requirements.md` is the authoritative specification. Read it before changing
+behaviour. The constraints that govern almost every change:
+
+- The endpoint accepts **one or more** order lines per request and sums quantity per
+  `productId`.
+- Accumulated totals go to the downstream system **no more often than once every 20
+  seconds**. This is a minimum interval: a burst must never trigger an earlier
+  hand-over. Until a real integration exists, the hand-over writes the aggregated
+  payload as JSON to the console.
+- Design target is **hundreds of orders per second** over a **bounded catalogue of
+  roughly hundreds of product ids**. Optimise for write throughput, not cardinality.
+- Persistence must be **extensible and selectable through configuration**. The API
+  layer must not know which store is in use.
+- A rejected request changes no state, and an accepted quantity is counted exactly
+  once.
+
+`docs/requirements.md` also tracks the deltas between the specification and the
+current code. Keep that table honest: when you implement one, remove the row.
+
 ## Skills
 
 Detailed working procedures live as skills in `.agents/skills/`. Load the skill that

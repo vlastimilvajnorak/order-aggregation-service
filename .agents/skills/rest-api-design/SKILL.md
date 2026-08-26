@@ -16,6 +16,9 @@ description: HTTP contract rules for the REST API in this repository, following 
 
 ## Inspect first
 
+0. `docs/requirements.md` - the authoritative specification. The submission endpoint
+   must accept **one or more** order lines in a single request, and a rejected
+   request must change no state.
 1. `src/OrderAggregationService/Endpoints/OrderEndpoints.cs` - route constants and
    handler signatures
 2. `src/OrderAggregationService/Endpoints/OrderBatchValidator.cs` - the error key
