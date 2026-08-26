@@ -1,0 +1,95 @@
+---
+name: git-workflow
+description: Safe day-to-day Git practice for this repository - inspect git status before and after work, protect uncommitted user changes, stage only task-related files, review the diff before committing, branch from develop, resolve conflicts without losing work, and run pre-push checks. Use when the task involves git status, staging, branching, checkout, pull, fetch, rebase, merge, conflict resolution, push, stash, worktrees, or cleaning the working tree. Do not use to write the commit message text itself; that is conventional-commits.
+---
+
+# Git workflow
+
+## Repository facts you must respect
+
+- `develop` is the default branch and the integration target.
+- `master` is the stable branch. It accepts pull requests **only from `develop`**.
+- `main` is prohibited. A repository ruleset blocks its creation and update.
+- Both `develop` and `master` require a pull request. Force-push and branch deletion
+  are blocked, and the rules apply to repository admins with no bypass.
+- Because of this, you cannot push directly to `develop` or `master`. Work on a
+  topic branch and let the user decide when a pull request is opened.
+
+## Inspect first
+
+1. `git status --short --branch`
+2. `git stash list`
+3. `git log --oneline -5`
+4. `git remote -v` when the task mentions pushing or a remote
+
+## Workflow
+
+1. Run `git status` **before touching anything**. Report what you find.
+2. If the working tree has uncommitted changes you did not make, treat them as the
+   user's work. Do not stage, revert, stash or commit them unless the user asks.
+   Say what is there and continue only with your own files.
+3. Create a topic branch off the up-to-date integration branch when the task is a
+   code change:
+   `git switch develop && git pull --ff-only && git switch -c <type>/<short-slug>`
+4. Keep the change small and single-purpose. Split unrelated work into separate
+   commits or separate branches.
+5. Before committing, read the diff: `git diff` for unstaged, `git diff --staged`
+   for staged. Never commit a diff you have not looked at.
+6. Stage explicitly by path. Prefer `git add <path> ...` over `git add -A` or
+   `git add .` so unrelated files cannot ride along.
+7. Run `git diff --check` to catch whitespace errors and conflict markers.
+8. Run `git status` again after the work and report the final state.
+
+## Commit, push and pull requests
+
+- Commit only when the user's task calls for a commit. Writing code is not by
+  itself permission to commit.
+- Push, merge, tag, release and pull-request creation each need the user's task to
+  call for them. Never do them as an unrequested follow-up.
+- Never use `--force`. If a push is rejected, integrate first and report; use
+  `--force-with-lease` only when the user explicitly asks to rewrite a branch.
+- Before any push: working tree clean or intentionally staged, build and tests run
+  for the touched area, `git log` reviewed, and the remote confirmed to be this
+  repository.
+
+## Integrating changes
+
+- Use `git pull --ff-only` by default. If it fails, stop and report rather than
+  silently creating a merge commit.
+- Rebase only a branch that has not been shared, or when the user asks.
+- On a conflict, resolve it by reading both sides. Never resolve with
+  `--ours`/`--theirs` wholesale just to make the conflict disappear.
+- After resolving, re-read the merged file, rebuild, and re-run affected tests
+  before continuing.
+- If you cannot resolve a conflict safely, `git merge --abort` or
+  `git rebase --abort` restores the pre-merge state. Say so and ask.
+
+## Never do these without an explicit instruction
+
+- `git reset --hard`, `git checkout -- <path>` or `git restore` over user changes
+- `git clean -fd`
+- `git commit --amend`, `git rebase -i`, `git filter-branch`, history rewriting
+- `git push --force`
+- Deleting or renaming branches
+- `git stash` of the user's changes to "get them out of the way"
+
+## Working tree cleanliness
+
+- Do not create Git worktrees. If the user explicitly asks for one, place it only
+  where the repository's existing rules already allow, and never beside the
+  repository root.
+- Do not create scratch, backup, temp or output directories inside the repository
+  or next to it. Use the system temporary directory and clean up afterwards.
+- Never commit build output (`bin/`, `obj/`, `TestResults/`), coverage files, IDE
+  state, `.env` files, secrets, certificates or `appsettings.*.local.json`. These
+  are gitignored; if one shows up as staged, that is a bug to report, not to force
+  through with `git add -f`.
+- Before committing, scan the staged diff for credentials, tokens, connection
+  strings and absolute local paths.
+
+## Verify
+
+- `git status --short --branch` is clean or shows only intended changes
+- `git diff --check` produces no output
+- `git log --oneline -1` shows the expected commit on the expected branch
+- No file outside the task's scope appears in `git show --stat HEAD`

@@ -2,6 +2,12 @@
 **/.gitignore
 **/.gitattributes
 **/.github
+**/.agents
+**/.claude
+docs
+scripts
+**/AGENTS.md
+**/CLAUDE.md
 **/.vs
 **/.vscode
 **/.idea

@@ -27,6 +27,10 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@v5
 
+      # Cheap, no toolchain needed, and it fails fast before the build starts.
+      - name: Validate the agent skills
+        run: python3 scripts/validate-agent-skills.py
+
       - name: Set up the .NET 10 SDK
         uses: actions/setup-dotnet@v5
         with:
