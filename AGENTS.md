@@ -115,8 +115,10 @@ A Release build must produce zero warnings; warnings are errors in this reposito
 
 ## Code Review Rules
 
-These govern automated review of a pull request. Both reviewers read them: Codex
-reads this file directly, and `CLAUDE.md` imports it.
+These govern review of a change, whoever performs it. Codex reads this file
+directly and `CLAUDE.md` imports it, so both agents apply them when asked to
+review - and Codex cloud's GitHub review reads the same section if it is ever
+switched on. No review runs automatically in CI.
 
 - `docs/requirements.md` is the authoritative specification. Where the code, the
   tests or the README disagree with it, the document wins and the other is a

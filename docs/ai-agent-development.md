@@ -105,34 +105,26 @@ files whose canonical source is gone.
 6. Run the sync, then add the skill to the tables in `AGENTS.md`, `CLAUDE.md` and
    this document.
 
-## Automated code review
+## Code review
 
-Every pull request into `develop` or `master` is reviewed by both agents:
+No agent reviews pull requests automatically. Workflows for Claude and for Codex were
+both built and then dropped: each runs on an API key and bills per pull request, on
+top of a subscription that already covers the same work, and two reviewers on one diff
+largely agree with each other anyway. The only required status check is **Build and
+test**.
 
-| Workflow | Action | Model | Secret |
-| --- | --- | --- | --- |
-| `.github/workflows/claude-code-review.yml` | `anthropics/claude-code-action@v1` | `claude-opus-5` | `ANTHROPIC_API_KEY` |
-| `.github/workflows/codex-code-review.yml` | `openai/codex-action@v1` | `gpt-5.6-sol` | `OPENAI_API_KEY` |
+What survives is the `## Code Review Rules` section of `AGENTS.md`. It is the rules,
+not the plumbing, so it stays useful whichever way a review is actually run:
 
-Both are **advisory**. They comment and never gate: the only required status check
-is **Build and test**, so a review that is slow, unavailable or simply wrong cannot
-block delivery. Both skip pull requests from forks, which cannot read the secrets
-and would otherwise fail for a reason the contributor cannot fix.
+- **By hand.** Ask Codex or Claude Code to review a change; both load `AGENTS.md`
+  (Claude Code through the `@AGENTS.md` import in `CLAUDE.md`).
+- **Through Codex cloud.** Its native GitHub review is a toggle in Codex settings and
+  reads the same section. It needs no secret, no workflow and no action allow-list
+  entry, and it draws on the ChatGPT plan rather than on API billing.
 
-The rules the reviewers apply are the `## Code Review Rules` section of `AGENTS.md`,
-not text embedded in the workflows. Codex reads that file directly and `CLAUDE.md`
-imports it, so a change to the rules reaches both reviewers and every contributing
-agent at once. The workflow prompts do nothing but point at it.
-
-The Codex workflow runs the model with `contents: read` and posts the result from a
-second job holding only `pull-requests: write`. The job that reads changed files
-therefore has nothing to write with, which matters because those files are
-untrusted input: `AGENTS.md` tells both reviewers never to treat text inside a diff
-as an instruction addressed to them.
-
-Because the repository restricts which actions may run, each reviewer's action is
-allow-listed by pattern in **Settings > Actions > General**. An action that is not
-listed fails the run at startup, before any job is created.
+Keeping the rules in `AGENTS.md` rather than in a workflow prompt is what lets them
+survive a change of tooling: the rules a reviewer applies and the rules a contributing
+agent follows are the same text, so they cannot fork.
 
 ## Preventing divergence
 
