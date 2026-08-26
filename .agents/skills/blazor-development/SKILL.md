@@ -1,0 +1,138 @@
+---
+name: blazor-development
+description: Rules for the Blazor Web App UI in this repository - render mode choice, component structure, keeping application logic out of components, injected services, async lifecycle methods, cancellation for polling, disposal, loading and empty and error states, forms and validation, accessibility, and safe rendering of data. Use only when working on .razor files, Razor component code-behind, the Components folder, UI state, layout, wwwroot assets, or the dashboard's API client. Do not use for backend endpoints, services or tests, and do not rewrite UI just because backend code changed.
+---
+
+# Blazor development
+
+## Scope
+
+The UI lives in `src/OrderAggregationService/Components/`:
+
+```text
+Components/App.razor          Root document, script and stylesheet references
+Components/Routes.razor       Router
+Components/_Imports.razor     Shared @using directives
+Components/Layout/            MainLayout, NavMenu, ReconnectModal
+Components/Pages/             Home, Dashboard, Error, NotFound
+```
+
+The UI is hosted in the same process as the API. There is no separate Dashboard
+project. If one is ever extracted, it must talk to the service over HTTP, never by
+referencing the aggregation internals directly.
+
+**Do not touch this area unless the task is about the UI.** A change to an endpoint,
+a service or a test does not by itself require a component change.
+
+## Inspect first
+
+1. `Components/_Imports.razor` - what is already in scope
+2. `Components/Routes.razor` and `Components/App.razor` - routing and document shape
+3. The component you are changing, in full, including its `@code` block
+4. `Components/Pages/Dashboard.razor` - the reference for an interactive page
+
+## Render mode
+
+- Static server rendering is the default. Leave a page static unless it needs
+  interactivity.
+- Add `@rendermode InteractiveServer` **per page**, only when the page handles
+  events, timers or live updates. Do not set an interactive mode globally.
+- A statically rendered page runs its lifecycle once. Never attach a timer or an
+  event handler there.
+- Guard interactive-only work with `RendererInfo.IsInteractive`, because
+  `OnInitializedAsync` also runs during prerendering. Anything started in
+  `OnAfterRender(firstRender: true)` must be inside that guard.
+- Prerendering runs component initialisation twice per navigation. Initialisation
+  must be idempotent and side-effect free.
+
+## Structure and responsibilities
+
+- Components render and handle user intent. They do not aggregate, validate or
+  transform domain data - inject a service and call it.
+- Keep the `@code` block small. When it grows past roughly 60 lines of logic, move
+  the logic into a service under `Services/`, not into a bigger component.
+- Extract a child component when markup repeats or when a section has its own state.
+- Pass data down through `[Parameter]`; raise intent up through `EventCallback`.
+  Never reach into a parent.
+- Parameters are inputs: do not mutate a `[Parameter]` property from inside the
+  component.
+
+## Data access
+
+- Inject abstractions (`IOrderAggregator`, `HealthCheckService`), never a concrete
+  store or persistence type.
+- If a component ever needs a remote API, use a typed or named `HttpClient`
+  registered in `Program.cs` with the base address taken from configuration. Never
+  hard-code a host, port or `http://localhost` in a component.
+- Do not call `IConfiguration` directly from a component. Inject `IOptions<T>`.
+
+## Async, cancellation and disposal
+
+- Use `OnInitializedAsync` and `OnParametersSetAsync` for data loading; never block
+  with `.Result` or `.Wait()`.
+- A component that polls, times or subscribes owns a `CancellationTokenSource`,
+  passes its token into every awaited call, and implements `IAsyncDisposable`.
+- Cancel first, then dispose the timer, then await the loop task, catching
+  `OperationCanceledException`, then dispose the token source.
+- Call `StateHasChanged` through `InvokeAsync` from any callback that did not come
+  from the renderer's synchronisation context.
+- Never start a fire-and-forget `Task` without holding a reference you can await
+  during disposal.
+
+## Rendering states
+
+Every data-bound view handles all four states explicitly:
+
+- **Loading** - the data has not arrived yet
+- **Empty** - the call succeeded and returned nothing; say so in words
+- **Success** - render the data
+- **Error** - the call failed; show what the user can do, never a raw exception
+
+## Forms, validation and accessibility
+
+- Use `EditForm` with a model and `DataAnnotationsValidator`; show messages with
+  `ValidationSummary` or `ValidationMessage`.
+- Client-side validation is convenience only. The API validates independently.
+- Every input has a `<label>` bound to it. Every icon-only control has an
+  `aria-label`. Decorative markup carries `aria-hidden="true"`.
+- Tables use `<th scope="col">`. Headings descend without skipping levels.
+- Do not convey meaning by colour alone.
+- Use the Bootstrap grid already in `wwwroot/lib/bootstrap` for responsive layout.
+
+## Safety
+
+- Razor HTML-encodes interpolated values by default. Do not use `MarkupString` on
+  anything that originated outside this application.
+- Never render secrets, connection strings, stack traces or raw exception messages.
+- Format dates and numbers explicitly with `CultureInfo.InvariantCulture` when the
+  value is machine-oriented, and wrap such calls in `@( ... )` so Razor parses them.
+
+## JavaScript interop
+
+- Avoid it. Prefer a Blazor or CSS solution.
+- When unavoidable, keep it to a small colocated `.razor.js` module, load it lazily,
+  and dispose the `IJSObjectReference`.
+- Never call JS interop during prerendering; it fails.
+
+## Dependencies
+
+Do not add a UI component library, CSS framework or JavaScript package. Bootstrap is
+already present and is enough for this dashboard.
+
+## Verify
+
+```bash
+dotnet build --configuration Release --no-restore
+dotnet test --configuration Release --no-build
+```
+
+Then check by reading:
+
+- the page still renders with no data, with data, and after a failed call
+- interactive work is inside a `RendererInfo.IsInteractive` guard
+- every `CancellationTokenSource`, timer and `IJSObjectReference` is disposed
+- no domain logic moved into the component
+
+Official references verified 2026-08-26:
+<https://learn.microsoft.com/aspnet/core/blazor/>,
+<https://learn.microsoft.com/aspnet/core/blazor/components/render-modes>.

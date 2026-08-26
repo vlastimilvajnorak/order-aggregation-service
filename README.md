@@ -77,9 +77,16 @@ Services/OrderDispatchBackgroundService ──▶ Services/IOrderDispatcher
 
 ```
 .
+├── .agents/skills/                # Canonical agent skills, read directly by Codex
+├── .claude/skills/                # Generated mirror for Claude Code, do not edit
 ├── .github/workflows/
 │   ├── ci.yml                     # Build and test on every push and pull request
 │   └── pr-policy.yml              # Enforces that master only accepts PRs from develop
+├── docs/
+│   ├── requirements.md            # Authoritative specification and acceptance criteria
+│   └── ai-agent-development.md    # How Codex and Claude Code are configured
+├── scripts/
+│   └── validate-agent-skills.py   # Validates the skills and syncs the mirror
 ├── src/OrderAggregationService/
 │   ├── Components/                # Blazor layout and pages (Home, Dashboard, Error, NotFound)
 │   ├── Endpoints/                 # Minimal API endpoints, validation, health endpoint
@@ -97,6 +104,8 @@ Services/OrderDispatchBackgroundService ──▶ Services/IOrderDispatcher
 ├── .editorconfig
 ├── .dockerignore
 ├── .gitignore
+├── AGENTS.md                      # Working agreements for AI coding agents
+├── CLAUDE.md                      # Imports AGENTS.md, adds Claude Code specifics
 ├── Directory.Build.props
 ├── Directory.Packages.props
 ├── Dockerfile
@@ -276,14 +285,20 @@ uses the single-line readable formatter. Log messages are generated at compile t
 
 | Branch | Role | Rules |
 | --- | --- | --- |
-| `develop` | Default branch, integration target | Changes only via pull request, Copilot code review is requested automatically, all review threads must be resolved, CI must pass |
+| `develop` | Default branch, integration target | Changes only via pull request, no approvals required, all review threads must be resolved, CI must pass |
 | `master` | Stable branch | Changes only via pull request **from `develop`**, no review required, CI and the source-branch check must pass |
 | `main` | Not used | Creation and updates are blocked by a repository ruleset |
 
-The `CI` workflow restores, builds in `Release` and runs the tests on every push and pull
-request to `develop` and `master`, and uploads the `.trx` test results as an artifact. The
-`PR policy` workflow runs only on pull requests into `master` and fails when the source branch
-is not `develop`; it is registered as a required status check so the rule cannot be skipped.
+The `CI` workflow validates the agent skills, restores, builds in `Release` and runs the tests
+on every push and pull request to `develop` and `master`, and uploads the `.trx` test results
+as an artifact. The `PR policy` workflow runs only on pull requests into `master` and fails
+when the source branch is not `develop`; it is registered as a required status check so the
+rule cannot be skipped.
+
+## AI agent development
+
+Codex and Claude Code are configured from `AGENTS.md` and version-controlled skills. See
+[docs/ai-agent-development.md](docs/ai-agent-development.md).
 
 ## Future improvements
 
