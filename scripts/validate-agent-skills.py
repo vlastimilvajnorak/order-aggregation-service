@@ -72,6 +72,15 @@ def write_text(path: Path, content: str) -> None:
     path.write_text(content, encoding="utf-8", newline="\n")
 
 
+def is_utf8_text(path: Path) -> bool:
+    """Whether the file decodes as UTF-8, i.e. can be mirrored as text."""
+    try:
+        path.read_text(encoding="utf-8")
+    except UnicodeDecodeError:
+        return False
+    return True
+
+
 def split_frontmatter(content: str) -> tuple[list[str] | None, str]:
     """Return the frontmatter lines and the body, or (None, content) when absent."""
     if not content.startswith("---\n"):
@@ -252,6 +261,7 @@ def check_mirror(sync: bool) -> list[str]:
     problems: list[str] = []
     canonical_skills = iter_skill_directories(CANONICAL_DIR)
     expected: dict[Path, str] = {}
+    binary: dict[Path, Path] = {}
 
     for skill_dir in canonical_skills:
         for relative in iter_skill_files(skill_dir):
@@ -259,17 +269,25 @@ def check_mirror(sync: bool) -> list[str]:
             target = MIRROR_DIR / skill_dir.name / relative
             if source.suffix.lower() == ".md":
                 expected[target] = build_mirror_content(rel_posix(source), read_text(source))
-            else:
+            elif is_utf8_text(source):
                 expected[target] = read_text(source)
+            else:
+                # Scripts and assets may legitimately be binary (an image, an archive).
+                # Those are mirrored byte for byte; only text goes through line-ending
+                # normalization, which would corrupt them.
+                binary[target] = source
 
     if sync:
         MIRROR_DIR.mkdir(parents=True, exist_ok=True)
         for target, content in expected.items():
             write_text(target, content)
+        for target, source in binary.items():
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(source.read_bytes())
 
         # Remove files the canonical tree no longer produces.
         for path in sorted(MIRROR_DIR.rglob("*"), reverse=True):
-            if path.is_file() and path not in expected:
+            if path.is_file() and path not in expected and path not in binary:
                 path.unlink()
             elif path.is_dir() and not any(path.iterdir()):
                 path.rmdir()
@@ -278,12 +296,22 @@ def check_mirror(sync: bool) -> list[str]:
     for target, content in sorted(expected.items()):
         if not target.is_file():
             problems.append(f"{rel_posix(target)}: missing from the {MIRROR_REL} mirror")
+        elif not is_utf8_text(target):
+            problems.append(
+                f"{rel_posix(target)}: expected a text file but the mirror copy is not UTF-8"
+            )
         elif read_text(target) != content:
+            problems.append(f"{rel_posix(target)}: out of date with respect to {CANONICAL_REL}")
+
+    for target, source in sorted(binary.items()):
+        if not target.is_file():
+            problems.append(f"{rel_posix(target)}: missing from the {MIRROR_REL} mirror")
+        elif target.read_bytes() != source.read_bytes():
             problems.append(f"{rel_posix(target)}: out of date with respect to {CANONICAL_REL}")
 
     if MIRROR_DIR.is_dir():
         for path in sorted(MIRROR_DIR.rglob("*")):
-            if path.is_file() and path not in expected:
+            if path.is_file() and path not in expected and path not in binary:
                 problems.append(
                     f"{rel_posix(path)}: present in the mirror but not in {CANONICAL_REL}"
                 )
