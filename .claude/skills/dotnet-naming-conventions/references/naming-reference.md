@@ -17,6 +17,10 @@ Verified 2026-08-26:
   <https://learn.microsoft.com/dotnet/standard/design-guidelines/naming-guidelines>
 - .NET code-style rules enforced by analyzers -
   <https://learn.microsoft.com/dotnet/fundamentals/code-analysis/code-style-rule-options>
+- ASP.NET Core Razor components, naming and namespaces -
+  <https://learn.microsoft.com/aspnet/core/blazor/components/>
+- ASP.NET Core Blazor data binding, the `@bind-{PROPERTY}` contract -
+  <https://learn.microsoft.com/aspnet/core/blazor/components/data-binding>
 
 Where this repository's `.editorconfig` is stricter than the guidelines, the
 `.editorconfig` wins, because it is enforced by the build.
@@ -88,6 +92,39 @@ genuinely needed. This repository is async-only below the endpoint layer.
 
 When a new type does not fit one of these, that is a signal to reconsider the
 design before inventing a new suffix.
+
+## Razor component naming detail
+
+Framework requirements, enforced by the Razor compiler:
+
+- The component type name is the `.razor` file name. Renaming the file renames the
+  type, and every `<Tag />` usage must change with it.
+- The first character of the file name must be uppercase. `productDetail.razor` does
+  not compile as a component.
+- The namespace comes from the folder path under the project root namespace, unless
+  an `@namespace` directive overrides it. Moving a component between folders changes
+  its namespace and can break a `@using` elsewhere.
+
+The two-way binding contract, from the data-binding documentation:
+
+- `@bind-Year="year"` on a child component requires the child to declare a
+  `[Parameter] public int Year { get; set; }` and a
+  `[Parameter] public EventCallback<int> YearChanged { get; set; }`.
+- `@bind-{PROPERTY}` is equivalent to writing
+  `@bind-{PROPERTY}:event="{PROPERTY}Changed"`, so the `Changed` suffix is the
+  default the framework looks for, not a style choice.
+- Name a callback that is not part of a binding pair `On<Event>`
+  (`OnRefreshRequested`), so it reads as an action rather than a value change.
+
+Conventions worth holding to in this repository:
+
+- Routable components use the kebab-case form of their name in `@page`, so
+  `Dashboard.razor` routes at `/dashboard`.
+- Fields inside `@code` follow the same `_camelCase` rule as any other private
+  field. `Dashboard.razor` already does this; keep it that way.
+- Keep a component single-file while its logic stays small. Move to
+  `<Component>.razor.cs` with a `partial class` when the `@code` block outgrows the
+  markup, not as a default.
 
 ## Names to reject in review
 

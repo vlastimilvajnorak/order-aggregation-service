@@ -1,6 +1,6 @@
 ---
 name: dotnet-naming-conventions
-description: Naming rules for C# and .NET symbols in this repository - namespaces, assemblies, projects, types, records, interfaces, enums, members, parameters, private fields, constants, async methods, generic type parameters, extension methods, options classes, request and response contracts, endpoint classes, background services, DI extensions, and test names. Use when creating or renaming any C# symbol, file, folder or project, and when reviewing a name for accuracy. Do not use for deciding responsibilities or splitting types; that is object-oriented-design.
+description: Naming rules for C# and .NET symbols in this repository, following the Microsoft framework design and C# identifier guidelines - namespaces, assemblies, projects, types, records, interfaces, enums, members, parameters, private fields, constants, async methods, generic type parameters, extension methods, options classes, request and response contracts, endpoint classes, background services, DI extensions, Razor components and their parameters, and test names. Use when creating or renaming any C# symbol, Razor component, file, folder or project, and when reviewing a name for accuracy. Do not use for deciding responsibilities or splitting types; that is object-oriented-design.
 ---
 
 # .NET naming conventions
@@ -77,6 +77,30 @@ nothing. If no honest name exists, the type is doing too much; see
   `OrderAggregationService.Services`.
 - File-scoped namespace declarations only (`namespace X;`), enforced by
   `.editorconfig`.
+
+## Razor components
+
+Two of these are framework requirements, not preferences: the file name defines the
+component type name, and that name must start with an uppercase character.
+
+| Element | Convention | Example |
+| --- | --- | --- |
+| Component file | PascalCase `.razor`, first character uppercase (**required**) | `Dashboard.razor` |
+| Component type | Derived from the file name (**required**) | `Dashboard` |
+| Namespace | Derived from the folder under the root namespace | `OrderAggregationService.Components.Pages` |
+| Code-behind | `<Component>.razor.cs`, declared `partial` | `Dashboard.razor.cs` |
+| Scoped stylesheet | `<Component>.razor.css` | `MainLayout.razor.css` |
+| Colocated script | `<Component>.razor.js` | `ReconnectModal.razor.js` |
+| `[Parameter]` property | PascalCase, auto-implemented | `Title`, `Count` |
+| Two-way binding pair | `X` plus an `EventCallback<T>` named `XChanged` (**required** for `@bind-X`) | `Year` + `YearChanged` |
+| Event callback parameter | `On<Event>` when it is an action, not a bound value | `OnRefreshRequested` |
+| `RenderFragment` slot | `ChildContent` for the default slot | `ChildContent` |
+| Layout component | `...Layout` suffix | `MainLayout` |
+| Route template | kebab-case of the component name | `Dashboard.razor` -> `@page "/dashboard"` |
+| Field in `@code` | `_camelCase`, same rule as any private field | `_snapshot`, `_healthStatus` |
+
+Do not suffix a component with `Component`, and do not name a file `Index.razor`
+when the component has a real subject.
 
 ## Test naming
 
