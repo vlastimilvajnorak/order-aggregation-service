@@ -95,8 +95,6 @@ Services/IDispatchHistory ──▶ Services/InMemoryDispatchHistory   (recent h
 ├── .claude/skills/                # Generated mirror for Claude Code, do not edit
 ├── .github/workflows/
 │   ├── ci.yml                     # Build and test on every push and pull request
-│   ├── claude-code-review.yml     # Advisory Claude review on every pull request
-│   ├── codex-code-review.yml      # Advisory Codex review on every pull request
 │   └── pr-policy.yml              # Enforces that master only accepts PRs from develop
 ├── docs/
 │   ├── requirements.md            # Authoritative specification and acceptance criteria
@@ -514,9 +512,9 @@ rule cannot be skipped.
 
 ## AI agent development
 
-Codex and Claude Code are configured from `AGENTS.md` and version-controlled skills, and
-both review every pull request into `develop` and `master`. Those reviews are advisory:
-the only required status check is **Build and test**. See
+Codex and Claude Code are configured from `AGENTS.md` and version-controlled skills,
+which also carry the rules for reviewing a change. No agent reviews pull requests
+automatically; the only required status check is **Build and test**. See
 [docs/ai-agent-development.md](docs/ai-agent-development.md).
 
 ## Future improvements
