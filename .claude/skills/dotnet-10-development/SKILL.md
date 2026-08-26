@@ -34,8 +34,20 @@ application, application to domain, infrastructure to domain.
 ## Project and package rules
 
 - Every project declares `<TargetFramework>net10.0</TargetFramework>` explicitly.
-- Use the current stable C# shipped with the .NET 10 SDK. Do not set
-  `<LangVersion>preview</LangVersion>`.
+- `LangVersion` is pinned in `Directory.Build.props` to the newest language version the
+  target framework supports, which is **C# 14** for `net10.0`. Raise it only together
+  with the target framework, in the same commit.
+- Do not set it to `latest`: that resolves against whichever SDK is installed, so the
+  language version can change without a change to this repository. Do not set it to
+  `preview` either.
+- Write current C# rather than the lowest common denominator. The constructs already
+  used across the codebase, and the ones to keep reaching for:
+  file-scoped namespaces, `sealed record` for data that crosses a boundary, collection
+  expressions (`[]`, `[.. items]`), switch expressions and pattern matching,
+  target-typed `new()`, `System.Threading.Lock` rather than `lock (object)`, and
+  primary constructors where a type is genuinely just its dependencies.
+- Reaching for a newer construct is not a reason to rewrite working code. Use it in
+  what you touch.
 - Central package management is on. Add a `PackageVersion` to
   `Directory.Packages.props` and a `PackageReference` **without** `Version` to the
   csproj. A `Version` attribute in a csproj is an error here.

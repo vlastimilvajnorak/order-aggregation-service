@@ -6,7 +6,13 @@
   -->
 
   <PropertyGroup Label="Language">
-    <LangVersion>latest</LangVersion>
+    <!--
+      C# 14 is the newest language version net10.0 supports, and the version the SDK
+      already selects for this target framework. Pinning it states the intent and keeps
+      the build reproducible: "latest" would quietly change with the installed SDK, so
+      raise this together with the target framework instead.
+    -->
+    <LangVersion>14.0</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
