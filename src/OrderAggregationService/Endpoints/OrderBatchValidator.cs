@@ -1,9 +1,7 @@
-using OrderAggregationService.Models;
-
 namespace OrderAggregationService.Endpoints;
 
 /// <summary>
-/// Validates a submitted order batch and projects it onto domain order lines.
+/// Validates a submitted order batch and projects it onto domain orders.
 /// </summary>
 /// <remarks>
 /// Implemented as a pure function so the rules can be unit tested without an HTTP context.
@@ -16,32 +14,34 @@ public static class OrderBatchValidator
     /// Validates the submitted batch.
     /// </summary>
     /// <param name="request">The deserialized request body, which may be null or empty.</param>
-    /// <param name="maxLinesPerRequest">Maximum number of lines accepted in one request.</param>
+    /// <param name="maxOrdersPerRequest">Maximum number of orders accepted in one request.</param>
+    /// <param name="maxProductIdLength">Maximum length of a product identifier.</param>
     /// <returns>
-    /// A result carrying either the validated order lines or the collected validation errors.
+    /// A result carrying either the validated orders or the collected validation errors.
     /// </returns>
     public static OrderBatchValidationResult Validate(
-        IReadOnlyList<OrderItemRequest>? request,
-        int maxLinesPerRequest)
+        IReadOnlyList<OrderRequest>? request,
+        int maxOrdersPerRequest,
+        int maxProductIdLength)
     {
         var errors = new Dictionary<string, string[]>(StringComparer.Ordinal);
 
         if (request is null || request.Count == 0)
         {
-            errors[BatchErrorKey] = ["The request body must contain at least one order line."];
+            errors[BatchErrorKey] = ["The request body must contain at least one order."];
             return OrderBatchValidationResult.Invalid(errors);
         }
 
-        if (request.Count > maxLinesPerRequest)
+        if (request.Count > maxOrdersPerRequest)
         {
             errors[BatchErrorKey] =
             [
-                $"A single request must not contain more than {maxLinesPerRequest} order lines.",
+                $"A single request must not contain more than {maxOrdersPerRequest} orders.",
             ];
             return OrderBatchValidationResult.Invalid(errors);
         }
 
-        var lines = new List<OrderLine>(request.Count);
+        var orders = new List<Order>(request.Count);
 
         for (var index = 0; index < request.Count; index++)
         {
@@ -49,7 +49,7 @@ public static class OrderBatchValidator
 
             if (item is null)
             {
-                errors[$"[{index}]"] = ["The order line must not be null."];
+                errors[$"[{index}]"] = ["The order must not be null."];
                 continue;
             }
 
@@ -58,6 +58,14 @@ public static class OrderBatchValidator
             if (string.IsNullOrWhiteSpace(item.ProductId))
             {
                 errors[$"[{index}].productId"] = ["productId is required and must not be empty."];
+                isValid = false;
+            }
+            else if (item.ProductId.Length > maxProductIdLength)
+            {
+                errors[$"[{index}].productId"] =
+                [
+                    $"productId must not be longer than {maxProductIdLength} characters.",
+                ];
                 isValid = false;
             }
 
@@ -69,12 +77,12 @@ public static class OrderBatchValidator
 
             if (isValid)
             {
-                lines.Add(new OrderLine(item.ProductId!, item.Quantity));
+                orders.Add(new Order(item.ProductId!, item.Quantity));
             }
         }
 
         return errors.Count == 0
-            ? OrderBatchValidationResult.Valid(lines)
+            ? OrderBatchValidationResult.Valid(orders)
             : OrderBatchValidationResult.Invalid(errors);
     }
 }

@@ -1,16 +1,16 @@
 namespace OrderAggregationService.Models;
 
 /// <summary>
-/// An order line that has already passed validation and is safe to aggregate.
+/// An order that has already passed validation and is safe to aggregate.
 /// </summary>
-public sealed record OrderLine
+public sealed record Order
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="OrderLine"/> class.
+    /// Initializes a new instance of the <see cref="Order"/> class.
     /// </summary>
     /// <param name="productId">Identifier of the ordered product.</param>
     /// <param name="quantity">Number of ordered units.</param>
-    public OrderLine(string productId, int quantity)
+    public Order(string productId, int quantity)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(productId);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(quantity);

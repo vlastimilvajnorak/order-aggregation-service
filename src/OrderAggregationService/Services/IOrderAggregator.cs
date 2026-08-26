@@ -1,5 +1,3 @@
-using OrderAggregationService.Models;
-
 namespace OrderAggregationService.Services;
 
 /// <summary>
@@ -15,13 +13,13 @@ namespace OrderAggregationService.Services;
 public interface IOrderAggregator
 {
     /// <summary>
-    /// Adds a batch of validated order lines to the aggregate.
+    /// Adds a request of validated orders to the aggregate.
     /// </summary>
-    /// <param name="lines">Validated order lines to accumulate.</param>
+    /// <param name="orders">Validated orders to accumulate.</param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
     /// <returns>A receipt describing what was accepted.</returns>
     ValueTask<OrderBatchReceipt> AggregateAsync(
-        IReadOnlyList<OrderLine> lines,
+        IReadOnlyList<Order> orders,
         CancellationToken cancellationToken = default);
 
     /// <summary>

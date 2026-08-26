@@ -10,14 +10,16 @@ namespace OrderAggregationService.Services;
 /// </remarks>
 internal static partial class Log
 {
+    // Debug, not Information: at the design load of hundreds of batches per second an
+    // Information line per batch would drown the log. The dispatch cycle reports the totals.
     [LoggerMessage(
         EventId = 1000,
-        Level = LogLevel.Information,
-        Message = "Accepted order batch {BatchId} with {AcceptedLineCount} lines and {AcceptedQuantity} units.")]
+        Level = LogLevel.Debug,
+        Message = "Accepted request {BatchId} with {AcceptedOrderCount} orders and {AcceptedQuantity} units.")]
     public static partial void OrderBatchAccepted(
         ILogger logger,
         Guid batchId,
-        int acceptedLineCount,
+        int acceptedOrderCount,
         long acceptedQuantity);
 
     [LoggerMessage(
@@ -63,6 +65,6 @@ internal static partial class Log
     [LoggerMessage(
         EventId = 1200,
         Level = LogLevel.Information,
-        Message = "Dispatching {ProductCount} aggregated products totalling {TotalQuantity} units.")]
-    public static partial void AggregatesDispatched(ILogger logger, int productCount, long totalQuantity);
+        Message = "Handed over {ProductCount} aggregated products; the payload was written to stdout as JSON.")]
+    public static partial void AggregatesDispatched(ILogger logger, int productCount);
 }

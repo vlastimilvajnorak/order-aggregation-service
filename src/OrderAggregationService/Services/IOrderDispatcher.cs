@@ -1,5 +1,3 @@
-using OrderAggregationService.Models;
-
 namespace OrderAggregationService.Services;
 
 /// <summary>

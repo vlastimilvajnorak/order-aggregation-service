@@ -1,6 +1,10 @@
 <Solution>
   <Folder Name="/src/">
+    <!-- The web app comes first: a fresh Visual Studio open takes the first project
+         as the default startup, and starting the load generator without the service
+         running only produces a stream of connection failures. -->
     <Project Path="src/OrderAggregationService/OrderAggregationService.csproj" />
+    <Project Path="src/OrderAggregationService.LoadGenerator/OrderAggregationService.LoadGenerator.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/OrderAggregationService.Tests/OrderAggregationService.Tests.csproj" />

@@ -1,5 +1,3 @@
-using OrderAggregationService.Models;
-
 namespace OrderAggregationService.Endpoints;
 
 /// <summary>
@@ -7,13 +5,13 @@ namespace OrderAggregationService.Endpoints;
 /// </summary>
 public sealed class OrderBatchValidationResult
 {
-    private static readonly IReadOnlyList<OrderLine> NoLines = [];
+    private static readonly IReadOnlyList<Order> NoLines = [];
     private static readonly IDictionary<string, string[]> NoErrors =
         new Dictionary<string, string[]>(StringComparer.Ordinal);
 
-    private OrderBatchValidationResult(IReadOnlyList<OrderLine> lines, IDictionary<string, string[]> errors)
+    private OrderBatchValidationResult(IReadOnlyList<Order> orders, IDictionary<string, string[]> errors)
     {
-        Lines = lines;
+        Orders = orders;
         Errors = errors;
     }
 
@@ -23,9 +21,9 @@ public sealed class OrderBatchValidationResult
     public bool IsValid => Errors.Count == 0;
 
     /// <summary>
-    /// Gets the validated order lines. Empty when <see cref="IsValid"/> is <see langword="false"/>.
+    /// Gets the validated orders. Empty when <see cref="IsValid"/> is <see langword="false"/>.
     /// </summary>
-    public IReadOnlyList<OrderLine> Lines { get; }
+    public IReadOnlyList<Order> Orders { get; }
 
     /// <summary>
     /// Gets the validation errors keyed by the offending request member, in the shape expected
@@ -36,13 +34,13 @@ public sealed class OrderBatchValidationResult
     /// <summary>
     /// Creates a successful result.
     /// </summary>
-    /// <param name="lines">The validated order lines.</param>
+    /// <param name="orders">The validated orders.</param>
     /// <returns>A valid result.</returns>
-    public static OrderBatchValidationResult Valid(IReadOnlyList<OrderLine> lines)
+    public static OrderBatchValidationResult Valid(IReadOnlyList<Order> orders)
     {
-        ArgumentNullException.ThrowIfNull(lines);
+        ArgumentNullException.ThrowIfNull(orders);
 
-        return new OrderBatchValidationResult(lines, NoErrors);
+        return new OrderBatchValidationResult(orders, NoErrors);
     }
 
     /// <summary>

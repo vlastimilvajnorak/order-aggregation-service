@@ -1,0 +1,103 @@
+.summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    padding: 1.1rem 1.25rem;
+}
+
+.cell .label {
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+}
+
+.cell .value {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-size: 1.125rem;
+    font-weight: 300;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    color: var(--color-bone);
+}
+
+.stamp {
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    font-variant-numeric: tabular-nums;
+}
+
+.check {
+    padding: 1.15rem 1.25rem;
+}
+
+.check + .check {
+    border-top: 1px solid var(--line-soft);
+}
+
+.check-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.check-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-bone);
+}
+
+.check-head .muted {
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+}
+
+.check-desc {
+    margin: 0.5rem 0 0;
+    color: var(--text-muted);
+}
+
+.data {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    gap: 0.9rem 1.5rem;
+    margin: 1rem 0 0;
+    padding: 1rem 0 0;
+    border-top: 1px solid var(--line-soft);
+}
+
+.data dt {
+    margin: 0;
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+}
+
+.data dd {
+    margin: 0.35rem 0 0;
+    font-size: 1rem;
+    font-weight: 300;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-bone);
+}
+
+@media (max-width: 780px) {
+    .summary {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

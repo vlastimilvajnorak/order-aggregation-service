@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>OrderAggregationService.LoadGenerator</RootNamespace>
+    <AssemblyName>OrderAggregationService.LoadGenerator</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      Referenced for the request contract only, so the generator cannot drift away from
+      what the API actually accepts.
+    -->
+    <ProjectReference Include="..\OrderAggregationService\OrderAggregationService.csproj" />
+  </ItemGroup>
+
+</Project>

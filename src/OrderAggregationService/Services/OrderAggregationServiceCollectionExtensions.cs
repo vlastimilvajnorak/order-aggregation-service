@@ -9,8 +9,8 @@ namespace OrderAggregationService.Services;
 public static class OrderAggregationServiceCollectionExtensions
 {
     /// <summary>
-    /// Registers the aggregation options, the aggregator, the dispatch pipeline and the
-    /// aggregation health check.
+    /// Registers the aggregation and persistence options, the configured provider, the
+    /// dispatch pipeline and the aggregation health check.
     /// </summary>
     /// <param name="services">The service collection to add to.</param>
     /// <param name="configuration">Configuration the options are bound from.</param>
@@ -28,13 +28,47 @@ public static class OrderAggregationServiceCollectionExtensions
                 static options => options.DispatchInterval > TimeSpan.Zero,
                 "OrderAggregation:DispatchInterval must be greater than zero.")
             .Validate(
-                static options => options.MaxLinesPerRequest > 0,
-                "OrderAggregation:MaxLinesPerRequest must be greater than zero.")
+                static options => options.MaxOrdersPerRequest > 0,
+                "OrderAggregation:MaxOrdersPerRequest must be greater than zero.")
+            .Validate(
+                static options => options.MaxProductIdLength > 0,
+                "OrderAggregation:MaxProductIdLength must be greater than zero.")
+            .ValidateOnStart();
+
+        services.AddOptions<OrderPersistenceOptions>()
+            .Bind(configuration.GetSection(OrderPersistenceOptions.SectionName))
+            .Validate(
+                static options => Enum.IsDefined(options.Provider),
+                "OrderPersistence:Provider must name a supported provider.")
+            .Validate(
+                static options => options.Provider == OrderStorageType.InMemory
+                    || !string.IsNullOrWhiteSpace(options.ConnectionString),
+                "OrderPersistence:ConnectionString is required by the selected provider.")
             .ValidateOnStart();
 
         services.TryAddSingleton(TimeProvider.System);
-        services.TryAddSingleton<IOrderAggregator, InMemoryOrderAggregator>();
-        services.TryAddSingleton<IOrderDispatcher, LoggingOrderDispatcher>();
+
+        // The provider is chosen by configuration. Adding one means a branch here, a
+        // member on OrderStorageType and a subclass of OrderAggregatorBase; nothing above
+        // this line, and no endpoint or component, has to change.
+        services.TryAddSingleton<IOrderAggregator>(static provider =>
+        {
+            var options = provider.GetRequiredService<IOptions<OrderPersistenceOptions>>().Value;
+
+            return options.Provider switch
+            {
+                OrderStorageType.InMemory =>
+                    ActivatorUtilities.CreateInstance<InMemoryOrderAggregator>(provider),
+                OrderStorageType.Database =>
+                    ActivatorUtilities.CreateInstance<DatabaseOrderAggregator>(provider),
+                _ => throw new InvalidOperationException(
+                    $"Unsupported {OrderPersistenceOptions.SectionName}:" +
+                    $"{nameof(OrderPersistenceOptions.Provider)} value '{options.Provider}'."),
+            };
+        });
+
+        services.TryAddSingleton<IOrderDispatcher, ConsoleOrderDispatcher>();
+        services.TryAddSingleton<IDispatchHistory, InMemoryDispatchHistory>();
         services.AddHostedService<OrderDispatchBackgroundService>();
 
         services.AddHealthChecks()

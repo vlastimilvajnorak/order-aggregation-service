@@ -32,8 +32,8 @@ internal sealed class OrderAggregationHealthCheck : IHealthCheck
         {
             ["pendingProducts"] = snapshot.ProductCount,
             ["pendingQuantity"] = snapshot.TotalQuantity,
-            ["acceptedBatches"] = snapshot.AcceptedBatchCount,
-            ["acceptedLines"] = snapshot.AcceptedLineCount,
+            ["acceptedRequests"] = snapshot.AcceptedRequestCount,
+            ["acceptedOrders"] = snapshot.AcceptedOrderCount,
         };
 
         return HealthCheckResult.Healthy("The order aggregator is accepting orders.", data);
