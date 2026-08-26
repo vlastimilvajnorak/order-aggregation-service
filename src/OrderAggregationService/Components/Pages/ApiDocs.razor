@@ -1,0 +1,23 @@
+@page "/api-docs"
+@using OrderAggregationService.Endpoints
+
+<PageTitle>API reference - Order Aggregation Service</PageTitle>
+
+<div class="page-head">
+    <div>
+        <h1>API reference</h1>
+        <p class="sub">
+            Swagger UI over the generated OpenAPI document. Every operation carries a summary
+            and a description of each status code, and requests can be sent from here.
+        </p>
+    </div>
+    <div class="head-actions">
+        <a class="button" href="@OpenApiEndpoints.DocumentPath" target="_blank" rel="noopener">
+            Raw document
+        </a>
+    </div>
+</div>
+
+<section class="panel frame">
+    <iframe src="@($"/{OpenApiEndpoints.SwaggerUiPrefix}")" title="Swagger UI"></iframe>
+</section>

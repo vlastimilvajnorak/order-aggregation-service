@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Logging.Abstractions;
-using OrderAggregationService.Models;
-using OrderAggregationService.Services;
+using Microsoft.Extensions.Time.Testing;
 
 namespace OrderAggregationService.Tests;
 
@@ -17,14 +16,14 @@ public sealed class InMemoryOrderAggregatorTests
     {
         var aggregator = CreateAggregator();
 
-        await aggregator.AggregateAsync([new OrderLine("456", 5), new OrderLine("456", 42)]);
+        await aggregator.AggregateAsync([new Order("456", 5), new Order("456", 42)]);
 
         var snapshot = await aggregator.GetSnapshotAsync();
         var product = Assert.Single(snapshot.Items);
 
         Assert.Equal("456", product.ProductId);
         Assert.Equal(47, product.TotalQuantity);
-        Assert.Equal(2, product.LineCount);
+        Assert.Equal(2, product.OrderCount);
     }
 
     [Fact]
@@ -32,17 +31,17 @@ public sealed class InMemoryOrderAggregatorTests
     {
         var aggregator = CreateAggregator();
 
-        await aggregator.AggregateAsync([new OrderLine("456", 5)]);
-        await aggregator.AggregateAsync([new OrderLine("456", 7)]);
-        await aggregator.AggregateAsync([new OrderLine("456", 1)]);
+        await aggregator.AggregateAsync([new Order("456", 5)]);
+        await aggregator.AggregateAsync([new Order("456", 7)]);
+        await aggregator.AggregateAsync([new Order("456", 1)]);
 
         var snapshot = await aggregator.GetSnapshotAsync();
         var product = Assert.Single(snapshot.Items);
 
         Assert.Equal(13, product.TotalQuantity);
-        Assert.Equal(3, product.LineCount);
-        Assert.Equal(3, snapshot.AcceptedBatchCount);
-        Assert.Equal(3, snapshot.AcceptedLineCount);
+        Assert.Equal(3, product.OrderCount);
+        Assert.Equal(3, snapshot.AcceptedRequestCount);
+        Assert.Equal(3, snapshot.AcceptedOrderCount);
     }
 
     [Fact]
@@ -52,9 +51,9 @@ public sealed class InMemoryOrderAggregatorTests
 
         await aggregator.AggregateAsync(
         [
-            new OrderLine("456", 5),
-            new OrderLine("789", 42),
-            new OrderLine("456", 3),
+            new Order("456", 5),
+            new Order("789", 42),
+            new Order("456", 3),
         ]);
 
         var snapshot = await aggregator.GetSnapshotAsync();
@@ -74,12 +73,12 @@ public sealed class InMemoryOrderAggregatorTests
     [Fact]
     public async Task AggregateAsync_StampsFirstSeenAndLastUpdated()
     {
-        var timeProvider = new FixedTimeProvider(Now);
+        var timeProvider = new FakeTimeProvider(Now);
         var aggregator = CreateAggregator(timeProvider);
 
-        await aggregator.AggregateAsync([new OrderLine("456", 1)]);
+        await aggregator.AggregateAsync([new Order("456", 1)]);
         timeProvider.Advance(TimeSpan.FromMinutes(5));
-        await aggregator.AggregateAsync([new OrderLine("456", 1)]);
+        await aggregator.AggregateAsync([new Order("456", 1)]);
 
         var snapshot = await aggregator.GetSnapshotAsync();
         var product = Assert.Single(snapshot.Items);
@@ -98,14 +97,14 @@ public sealed class InMemoryOrderAggregatorTests
         Assert.Empty(snapshot.Items);
         Assert.Equal(0, snapshot.ProductCount);
         Assert.Equal(0, snapshot.TotalQuantity);
-        Assert.Equal(0, snapshot.AcceptedBatchCount);
+        Assert.Equal(0, snapshot.AcceptedRequestCount);
     }
 
     [Fact]
     public async Task DrainAsync_ReturnsAndClearsEverything()
     {
         var aggregator = CreateAggregator();
-        await aggregator.AggregateAsync([new OrderLine("456", 5), new OrderLine("789", 42)]);
+        await aggregator.AggregateAsync([new Order("456", 5), new Order("789", 42)]);
 
         var drained = await aggregator.DrainAsync();
 
@@ -117,8 +116,8 @@ public sealed class InMemoryOrderAggregatorTests
         Assert.Empty(snapshot.Items);
 
         // Lifetime counters describe everything ever accepted, so draining must not reset them.
-        Assert.Equal(1, snapshot.AcceptedBatchCount);
-        Assert.Equal(2, snapshot.AcceptedLineCount);
+        Assert.Equal(1, snapshot.AcceptedRequestCount);
+        Assert.Equal(2, snapshot.AcceptedOrderCount);
     }
 
     [Fact]
@@ -132,7 +131,7 @@ public sealed class InMemoryOrderAggregatorTests
         {
             for (var batch = 0; batch < BatchesPerWriter; batch++)
             {
-                await aggregator.AggregateAsync([new OrderLine("456", 1), new OrderLine("789", 2)]);
+                await aggregator.AggregateAsync([new Order("456", 1), new Order("789", 2)]);
             }
         }));
 
@@ -143,10 +142,10 @@ public sealed class InMemoryOrderAggregatorTests
         Assert.Equal(2, snapshot.ProductCount);
         Assert.Equal(WriterCount * BatchesPerWriter, snapshot.Items[0].TotalQuantity);
         Assert.Equal(WriterCount * BatchesPerWriter * 2, snapshot.Items[1].TotalQuantity);
-        Assert.Equal(WriterCount * BatchesPerWriter, snapshot.AcceptedBatchCount);
-        Assert.Equal(WriterCount * BatchesPerWriter * 2, snapshot.AcceptedLineCount);
+        Assert.Equal(WriterCount * BatchesPerWriter, snapshot.AcceptedRequestCount);
+        Assert.Equal(WriterCount * BatchesPerWriter * 2, snapshot.AcceptedOrderCount);
     }
 
     private static InMemoryOrderAggregator CreateAggregator(TimeProvider? timeProvider = null) =>
-        new(timeProvider ?? new FixedTimeProvider(Now), NullLogger<InMemoryOrderAggregator>.Instance);
+        new(timeProvider ?? new FakeTimeProvider(Now), NullLogger<InMemoryOrderAggregator>.Instance);
 }

@@ -1,35 +1,33 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">Order Aggregation</a>
-    </div>
-</div>
+@* Icons are the Untitled UI outline set, matching the WPA admin: 16px, 1.5 stroke. *@
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+<div class="brand">Order Aggregation</div>
 
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
+<nav class="nav">
+    <NavLink class="item" href="" Match="NavLinkMatch.All">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 10.565c0-.574 0-.861.074-1.126a2 2 0 0 1 .318-.65c.163-.22.39-.397.843-.75l6.783-5.275c.351-.273.527-.41.72-.462a1 1 0 0 1 .523 0c.194.052.37.189.721.462l6.783 5.275c.453.353.68.53.843.75.145.195.252.416.318.65.074.265.074.552.074 1.126V17.8c0 1.12 0 1.68-.218 2.108a2 2 0 0 1-.874.874C19.48 21 18.92 21 17.8 21H6.2c-1.12 0-1.68 0-2.108-.218a2 2 0 0 1-.874-.874C3 19.48 3 18.92 3 17.8v-7.235Z" />
+        </svg>
+        <span>Overview</span>
+    </NavLink>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="dashboard">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Dashboard
-            </NavLink>
-        </div>
+    <NavLink class="item" href="dashboard">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M8 15v2m4-6v6m4-10v10m-8.2 4h8.4c1.68 0 2.52 0 3.162-.327a3 3 0 0 0 1.311-1.311C21 18.72 21 17.88 21 16.2V7.8c0-1.68 0-2.52-.327-3.162a3 3 0 0 0-1.311-1.311C18.72 3 17.88 3 16.2 3H7.8c-1.68 0-2.52 0-3.162.327a3 3 0 0 0-1.311 1.311C3 5.28 3 6.12 3 7.8v8.4c0 1.68 0 2.52.327 3.162a3 3 0 0 0 1.311 1.311C5.28 21 6.12 21 7.8 21Z" />
+        </svg>
+        <span>Dashboard</span>
+    </NavLink>
 
-        <div class="nav-item px-3">
-            <a class="nav-link" href="openapi/v1.json" target="_blank">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> OpenAPI
-            </a>
-        </div>
+    <NavLink class="item" href="api-docs">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M22 9H2m12 8.5 2.5-2.5-2.5-2.5m-4 0L7.5 15l2.5 2.5M2 7.8v8.4c0 1.68 0 2.52.327 3.162a3 3 0 0 0 1.311 1.311C4.28 21 5.12 21 6.8 21h10.4c1.68 0 2.52 0 3.162-.327a3 3 0 0 0 1.311-1.311C22 18.72 22 17.88 22 16.2V7.8c0-1.68 0-2.52-.327-3.162a3 3 0 0 0-1.311-1.311C19.72 3 18.88 3 17.2 3H6.8c-1.68 0-2.52 0-3.162.327a3 3 0 0 0-1.311 1.311C2 5.28 2 6.12 2 7.8Z" />
+        </svg>
+        <span>API Reference</span>
+    </NavLink>
 
-        <div class="nav-item px-3">
-            <a class="nav-link" href="health" target="_blank">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Health
-            </a>
-        </div>
-    </nav>
-</div>
+    <NavLink class="item" href="diagnostics">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+        </svg>
+        <span>Diagnostics</span>
+    </NavLink>
+</nav>

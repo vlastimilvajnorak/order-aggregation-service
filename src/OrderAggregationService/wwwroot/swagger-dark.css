@@ -1,0 +1,233 @@
+/*
+ * Blends Swagger UI into the charcoal admin shell. Injected by UseSwaggerUI, so it
+ * also applies when /swagger is opened directly.
+ *
+ * Swagger UI has no first-party dark theme, and restyling every component would be a
+ * maintenance burden against upstream markup changes. Inverting the page and rotating
+ * hue back keeps the method colours recognisable at a fraction of the cost.
+ */
+
+body {
+    background: #1f1f1b;
+    filter: invert(0.93) hue-rotate(180deg);
+}
+
+/*
+ * The invert filter sits on body, so the viewport scrollbar - which belongs to html -
+ * is never inverted and would stay glaring white. Colour it directly. Scrollbars of
+ * elements inside body are inverted along with everything else and need nothing.
+ */
+html {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(244 241 230 / 25%) #1f1f1b;
+}
+
+/* Photographic content must not be inverted; re-invert it back to normal. */
+img {
+    filter: invert(1) hue-rotate(180deg);
+}
+
+/* One document, one host - the branding bar with the definition picker is noise. */
+.swagger-ui .topbar {
+    display: none;
+}
+
+/* The scheme container renders as a grey slab otherwise. */
+.swagger-ui .scheme-container {
+    background: transparent;
+    box-shadow: none;
+}
+
+/*
+ * Compact density. Swagger UI's default spacing is generous enough that one operation
+ * fills a screen; these rules cut the padding roughly in half so the whole contract
+ * scans without scrolling. Only spacing and type sizes - colours and layout stay
+ * upstream's, so the overrides survive markup changes.
+ */
+.swagger-ui .wrapper {
+    padding: 0 12px;
+}
+
+.swagger-ui .information-container.wrapper {
+    padding-top: 10px;
+}
+
+.swagger-ui .info {
+    margin: 10px 0;
+}
+
+.swagger-ui .info .title {
+    font-size: 24px;
+}
+
+.swagger-ui .info .description p {
+    margin: 0 0 6px;
+}
+
+.swagger-ui .scheme-container {
+    margin: 0;
+    padding: 6px 0 10px;
+}
+
+.swagger-ui .servers-title {
+    font-size: 11px;
+}
+
+.swagger-ui .opblock-tag {
+    margin: 0 0 4px;
+    padding: 4px 10px;
+    font-size: 18px;
+}
+
+.swagger-ui .opblock {
+    margin: 0 0 8px;
+}
+
+.swagger-ui .opblock .opblock-summary {
+    padding: 3px 8px;
+}
+
+.swagger-ui .opblock .opblock-summary-method {
+    padding: 4px 0;
+    font-size: 12px;
+    min-width: 70px;
+}
+
+.swagger-ui .opblock .opblock-summary-path {
+    font-size: 14px;
+}
+
+.swagger-ui .opblock .opblock-summary-description {
+    font-size: 12px;
+}
+
+.swagger-ui .opblock-description-wrapper,
+.swagger-ui .opblock-external-docs-wrapper,
+.swagger-ui .opblock-title_normal {
+    margin: 0 0 8px;
+    padding: 8px 12px 0;
+}
+
+.swagger-ui .opblock-description-wrapper p {
+    font-size: 13px;
+    margin: 0;
+}
+
+.swagger-ui .opblock .opblock-section-header {
+    padding: 4px 12px;
+    min-height: auto;
+}
+
+.swagger-ui .opblock-section-header .opblock-title {
+    font-size: 13px;
+}
+
+.swagger-ui .opblock-body .opblock-section .opblock-section-request-body,
+.swagger-ui .parameters-container .parameters-col_description {
+    padding: 0;
+}
+
+.swagger-ui .parameters-container .opblock-description-wrapper p {
+    font-size: 13px;
+}
+
+.swagger-ui table thead tr td,
+.swagger-ui table thead tr th {
+    padding: 6px 0;
+    font-size: 12px;
+}
+
+.swagger-ui .parameters-col_name {
+    padding: 6px 0;
+}
+
+.swagger-ui .response-col_status {
+    font-size: 13px;
+}
+
+.swagger-ui .response-col_description {
+    font-size: 13px;
+}
+
+.swagger-ui .response-col_description .markdown p {
+    margin: 4px 0;
+    font-size: 13px;
+}
+
+.swagger-ui .responses-inner {
+    padding: 8px 12px;
+}
+
+.swagger-ui .responses-inner h4,
+.swagger-ui .responses-inner h5 {
+    font-size: 12px;
+    margin: 6px 0 4px;
+}
+
+.swagger-ui .response {
+    padding: 4px 0;
+}
+
+/* Example/schema payloads: cap the slab height and let long ones scroll inside. */
+.swagger-ui .highlight-code {
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+.swagger-ui .highlight-code .microlight {
+    padding: 8px !important;
+    font-size: 12px !important;
+    min-height: auto;
+}
+
+.swagger-ui .model-example {
+    margin-top: 4px;
+}
+
+.swagger-ui .tab li {
+    font-size: 11px;
+}
+
+.swagger-ui .btn {
+    padding: 3px 14px;
+    font-size: 12px;
+}
+
+.swagger-ui .try-out {
+    padding: 0;
+}
+
+.swagger-ui select {
+    padding: 3px 32px 3px 8px;
+    font-size: 12px;
+}
+
+.swagger-ui .servers > label {
+    margin: 0;
+    font-size: 11px;
+}
+
+.swagger-ui section.models {
+    margin: 8px 0;
+}
+
+.swagger-ui section.models h4 {
+    font-size: 14px;
+    padding: 6px 10px;
+}
+
+.swagger-ui section.models .model-container {
+    margin: 0 10px 8px;
+}
+
+/*
+ * Code and example slabs. Swagger UI's own payload blocks are dark, so the page-wide
+ * invert is what turns them into glaring light-grey slabs. Re-inverting them - the same
+ * treatment img gets above - restores their native dark rendering with the original
+ * syntax colours, which happens to sit well on the charcoal shell. pre is the right
+ * hook: every payload, curl command and request URL renders inside one, and they never
+ * nest, so nothing gets double-inverted.
+ */
+.swagger-ui pre {
+    filter: invert(1) hue-rotate(180deg);
+}

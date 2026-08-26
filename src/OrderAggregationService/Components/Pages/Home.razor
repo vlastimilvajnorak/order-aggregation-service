@@ -2,57 +2,51 @@
 
 <PageTitle>Order Aggregation Service</PageTitle>
 
-<h1>Order Aggregation Service</h1>
-
-<p class="lead">
-    A .NET 10 service that accepts batches of order lines over HTTP and accumulates the ordered
-    quantity per product, ready to be handed over to a downstream system.
-</p>
-
-<div class="row row-cols-1 row-cols-md-3 g-3 my-3">
-    <div class="col">
-        <div class="card h-100">
-            <div class="card-body">
-                <h2 class="card-title h5">Dashboard</h2>
-                <p class="card-text">Live service status and the current aggregate.</p>
-                <a class="btn btn-primary btn-sm" href="dashboard">Open dashboard</a>
-            </div>
-        </div>
+<div class="page-head">
+    <div>
+        <h1>Overview</h1>
+        <p class="sub">
+            A .NET 10 service that accepts requests carrying one or more orders, sums the ordered
+            quantity per product, and hands the totals to a downstream system no more often
+            than once every 20 seconds.
+        </p>
     </div>
-    <div class="col">
-        <div class="card h-100">
-            <div class="card-body">
-                <h2 class="card-title h5">OpenAPI</h2>
-                <p class="card-text">Machine readable description of the REST API.</p>
-                <a class="btn btn-outline-secondary btn-sm" href="openapi/v1.json" target="_blank">
-                    View document
-                </a>
-            </div>
-        </div>
-    </div>
-    <div class="col">
-        <div class="card h-100">
-            <div class="card-body">
-                <h2 class="card-title h5">Health</h2>
-                <p class="card-text">Readiness probe used by container orchestrators.</p>
-                <a class="btn btn-outline-secondary btn-sm" href="health" target="_blank">Check health</a>
-            </div>
-        </div>
+    <div class="head-actions">
+        <a class="button button-primary" href="dashboard">Open dashboard</a>
     </div>
 </div>
 
-<h2 class="h4 mt-4">Submit an order batch</h2>
-
-<p>
-    <code>POST /api/orders</code> takes a JSON array of order lines. Every line needs a non-empty
-    <code>productId</code> and a <code>quantity</code> greater than zero.
-</p>
-
-<pre class="bg-light border rounded p-3"><code>curl -X POST http://localhost:5212/api/orders \
+<section class="panel">
+    <div class="panel-head">
+        <h2>Submit orders</h2>
+        <span class="muted method">POST /api/orders</span>
+    </div>
+    <div class="panel-body">
+        <p class="lead">
+            The body is a JSON array. Every order needs a non-empty <code>productId</code> and a
+            <code>quantity</code> greater than zero. A request is accepted or rejected as a whole.
+        </p>
+<pre><code>curl -X POST http://localhost:5212/api/orders \
   -H "Content-Type: application/json" \
   -d '[{"productId":"456","quantity":5},{"productId":"789","quantity":42}]'</code></pre>
+        <p class="lead muted">
+            The service answers <code>202 Accepted</code> with a receipt. Read the running totals
+            back from <code>GET /api/orders/aggregates</code>, or watch them on the dashboard.
+        </p>
+    </div>
+</section>
 
-<p>
-    The service answers with <code>202 Accepted</code> and a receipt describing what was taken in.
-    Read the running totals back from <code>GET /api/orders/aggregates</code>.
-</p>
+<div class="links">
+    <a class="link-card panel" href="dashboard">
+        <span class="link-title">Dashboard</span>
+        <span class="link-sub">Live totals and service status</span>
+    </a>
+    <a class="link-card panel" href="api-docs">
+        <span class="link-title">API reference</span>
+        <span class="link-sub">Swagger UI over the OpenAPI document</span>
+    </a>
+    <a class="link-card panel" href="diagnostics">
+        <span class="link-title">Diagnostics</span>
+        <span class="link-sub">Health checks and current backlog</span>
+    </a>
+</div>

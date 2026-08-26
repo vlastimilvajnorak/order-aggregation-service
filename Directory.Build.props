@@ -17,6 +17,18 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup Label="Global usings">
+    <!--
+      Namespaces that appeared in most files of both projects. Every project here either
+      is OrderAggregationService or references it, which is what makes the two project
+      namespaces safe to declare repository-wide. Anything used in only a handful of
+      files stays an explicit using, so a reader can still see where a type comes from.
+    -->
+    <Using Include="Microsoft.Extensions.Options" />
+    <Using Include="OrderAggregationService.Models" />
+    <Using Include="OrderAggregationService.Services" />
+  </ItemGroup>
+
   <PropertyGroup Label="Build quality">
     <!-- Our own code must build clean. -->
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>

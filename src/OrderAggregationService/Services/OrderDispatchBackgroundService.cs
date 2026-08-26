@@ -1,5 +1,3 @@
-using Microsoft.Extensions.Options;
-
 namespace OrderAggregationService.Services;
 
 /// <summary>
@@ -14,6 +12,7 @@ public sealed class OrderDispatchBackgroundService : BackgroundService
 {
     private readonly IOrderAggregator _aggregator;
     private readonly IOrderDispatcher _dispatcher;
+    private readonly IDispatchHistory _history;
     private readonly OrderAggregationOptions _options;
     private readonly TimeProvider _timeProvider;
     private readonly ILogger<OrderDispatchBackgroundService> _logger;
@@ -23,24 +22,28 @@ public sealed class OrderDispatchBackgroundService : BackgroundService
     /// </summary>
     /// <param name="aggregator">Aggregator to drain.</param>
     /// <param name="dispatcher">Downstream dispatcher.</param>
+    /// <param name="history">Records what each cycle handed over.</param>
     /// <param name="options">Dispatch configuration.</param>
     /// <param name="timeProvider">Clock driving the dispatch timer.</param>
     /// <param name="logger">Logger for dispatch cycles.</param>
     public OrderDispatchBackgroundService(
         IOrderAggregator aggregator,
         IOrderDispatcher dispatcher,
+        IDispatchHistory history,
         IOptions<OrderAggregationOptions> options,
         TimeProvider timeProvider,
         ILogger<OrderDispatchBackgroundService> logger)
     {
         ArgumentNullException.ThrowIfNull(aggregator);
         ArgumentNullException.ThrowIfNull(dispatcher);
+        ArgumentNullException.ThrowIfNull(history);
         ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(timeProvider);
         ArgumentNullException.ThrowIfNull(logger);
 
         _aggregator = aggregator;
         _dispatcher = dispatcher;
+        _history = history;
         _options = options.Value;
         _timeProvider = timeProvider;
         _logger = logger;
@@ -99,6 +102,11 @@ public sealed class OrderDispatchBackgroundService : BackgroundService
         {
             totalQuantity += aggregate.TotalQuantity;
         }
+
+        // Recorded after the hand-over succeeded, so the history only ever shows what
+        // actually left. A drained batch that failed to send is a lost batch, which is
+        // the delivery-guarantee decision recorded in docs/requirements.md.
+        _history.Record(new DispatchRecord(_timeProvider.GetUtcNow(), pending.Count, totalQuantity));
 
         Log.DispatchCycleCompleted(_logger, cycleNumber, pending.Count, totalQuantity);
     }

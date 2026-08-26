@@ -1,19 +1,21 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
+@inject IHostEnvironment HostEnvironment
 
-<div class="page">
-    <div class="sidebar">
+<div class="app">
+    <aside class="sidebar">
         <NavMenu />
-    </div>
+    </aside>
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
+    <div class="main">
+        <header class="topbar">
+            <span class="title">Order Aggregation Service</span>
+            <span class="env">@HostEnvironment.EnvironmentName</span>
+        </header>
 
-        <article class="content px-4">
+        <main class="content">
             @Body
-        </article>
-    </main>
+        </main>
+    </div>
 </div>
 
 <div id="blazor-error-ui" data-nosnippet>

@@ -1,0 +1,110 @@
+@page "/diagnostics"
+@rendermode InteractiveServer
+
+@using System.Globalization
+@using Microsoft.Extensions.Diagnostics.HealthChecks
+
+@inject HealthCheckService HealthChecks
+@inject IHostEnvironment HostEnvironment
+
+<PageTitle>Diagnostics - Order Aggregation Service</PageTitle>
+
+<div class="page-head">
+    <div>
+        <h1>Diagnostics</h1>
+        <p class="sub">
+            The same report the container health check and orchestrators read from
+            <code>GET /health</code>.
+        </p>
+    </div>
+    <div class="head-actions">
+        <button type="button" class="button" @onclick="RefreshAsync" disabled="@(!RendererInfo.IsInteractive)">
+            Run checks
+        </button>
+    </div>
+</div>
+
+<div class="summary">
+    <div class="panel cell">
+        <span class="label">Status</span>
+        <span class="value">
+            <span class="dot @StatusModifier" aria-hidden="true"></span>@(_report?.Status.ToString() ?? "-")
+        </span>
+    </div>
+    <div class="panel cell">
+        <span class="label">Environment</span>
+        <span class="value">@HostEnvironment.EnvironmentName</span>
+    </div>
+    <div class="panel cell">
+        <span class="label">Evaluated in</span>
+        <span class="value">@Duration</span>
+    </div>
+</div>
+
+<section class="panel">
+    <div class="panel-head">
+        <h2>Checks</h2>
+        <span class="muted stamp">@_evaluatedAt</span>
+    </div>
+
+    @if (_report is null || _report.Entries.Count == 0)
+    {
+        <div class="panel-body muted">No health checks are registered.</div>
+    }
+    else
+    {
+        @foreach (var (name, entry) in _report.Entries)
+        {
+            <div class="check">
+                <div class="check-head">
+                    <span class="check-name">
+                        <span class="dot @Modifier(entry.Status)" aria-hidden="true"></span>@name
+                    </span>
+                    <span class="muted">@entry.Status</span>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(entry.Description))
+                {
+                    <p class="check-desc">@entry.Description</p>
+                }
+                @if (entry.Data.Count > 0)
+                {
+                    <dl class="data">
+                        @foreach (var (key, value) in entry.Data)
+                        {
+                            <div>
+                                <dt>@key</dt>
+                                <dd>@value</dd>
+                            </div>
+                        }
+                    </dl>
+                }
+            </div>
+        }
+    }
+</section>
+
+@code {
+    private HealthReport? _report;
+    private string _evaluatedAt = string.Empty;
+
+    private string Duration => _report is null
+        ? "-"
+        : $"{_report.TotalDuration.TotalMilliseconds.ToString("F1", CultureInfo.InvariantCulture)} ms";
+
+    private string StatusModifier => _report is null ? string.Empty : Modifier(_report.Status);
+
+    protected override async Task OnInitializedAsync() => await RefreshAsync();
+
+    private static string Modifier(HealthStatus status) => status switch
+    {
+        HealthStatus.Healthy => "is-healthy",
+        HealthStatus.Degraded => "is-degraded",
+        _ => "is-unhealthy",
+    };
+
+    private async Task RefreshAsync()
+    {
+        _report = await HealthChecks.CheckHealthAsync();
+        _evaluatedAt = $"Evaluated {DateTimeOffset.UtcNow.UtcDateTime.ToString("HH:mm:ss", CultureInfo.InvariantCulture)} UTC";
+    }
+}

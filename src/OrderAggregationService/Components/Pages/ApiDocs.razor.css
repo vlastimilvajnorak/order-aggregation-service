@@ -1,0 +1,13 @@
+.frame {
+    overflow: hidden;
+}
+
+iframe {
+    display: block;
+    width: 100%;
+    height: calc(100vh - 14rem);
+    min-height: 34rem;
+    border: 0;
+    /* swagger-dark.css inverts the document; match its charcoal ground. */
+    background: var(--color-charcoal);
+}
