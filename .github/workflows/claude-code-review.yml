@@ -1,0 +1,79 @@
+name: Claude code review
+
+# Reviews every pull request that targets an integration branch.
+#
+# The review is advisory on purpose: it comments, it never gates. The only
+# required check stays `Build and test` in ci.yml, so a slow or unavailable
+# review can never block delivery.
+on:
+  pull_request:
+    branches:
+      - develop
+      - master
+    types:
+      - opened
+      - synchronize
+
+permissions:
+  contents: read
+  pull-requests: write
+
+# A new push supersedes the review of the commit before it.
+concurrency:
+  group: claude-review-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  claude-review:
+    name: Claude code review
+    runs-on: ubuntu-latest
+
+    # A pull request from a fork cannot read repository secrets, so the review
+    # would fail for want of an API key. Skip it rather than report a false
+    # failure on a contribution that is otherwise fine.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v5
+
+      - name: Review the pull request
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          track_progress: true
+          # Opus 5 is the most capable model available for review work, which is
+          # what this job is for: a second opinion worth reading, not a linter.
+          claude_args: |
+            --model claude-opus-5
+            --max-turns 15
+          prompt: |
+            Review this pull request as a senior reviewer on this repository.
+
+            docs/requirements.md is the authoritative specification. When the
+            code, the tests or the README disagree with it, the document wins
+            and the other is a defect - say so explicitly.
+
+            AGENTS.md carries the working agreements, and .agents/skills/ holds
+            the repository's own standards for .NET 10, REST API design, Blazor,
+            naming, testing and object-oriented design. Review against those
+            rather than against generic style preferences.
+
+            Concentrate on, in this order:
+
+            1. Correctness. Lost updates or races in the aggregation path,
+               anything that lets a quantity be counted twice or dropped, and
+               anything that lets a rejected request change state.
+            2. The hand-over cadence. The 20-second interval is a minimum, and a
+               burst must never shorten it.
+            3. The HTTP contract. Every status the API can return must be
+               declared on its endpoint and described in the OpenAPI document,
+               and every failure must be RFC 9457 problem details.
+            4. Test coverage for the behaviour the change introduces, including
+               the failure and cancellation paths.
+            5. Genuine simplifications: duplicated logic, an abstraction that
+               earns nothing, a dependency that is not needed.
+
+            Report only what you are confident about, most serious first, each
+            anchored to a file and line. Say plainly when you find nothing worth
+            raising - do not pad the review to look thorough.
