@@ -105,6 +105,35 @@ files whose canonical source is gone.
 6. Run the sync, then add the skill to the tables in `AGENTS.md`, `CLAUDE.md` and
    this document.
 
+## Automated code review
+
+Every pull request into `develop` or `master` is reviewed by both agents:
+
+| Workflow | Action | Model | Secret |
+| --- | --- | --- | --- |
+| `.github/workflows/claude-code-review.yml` | `anthropics/claude-code-action@v1` | `claude-opus-5` | `ANTHROPIC_API_KEY` |
+| `.github/workflows/codex-code-review.yml` | `openai/codex-action@v1` | `gpt-5.6-sol` | `OPENAI_API_KEY` |
+
+Both are **advisory**. They comment and never gate: the only required status check
+is **Build and test**, so a review that is slow, unavailable or simply wrong cannot
+block delivery. Both skip pull requests from forks, which cannot read the secrets
+and would otherwise fail for a reason the contributor cannot fix.
+
+The rules the reviewers apply are the `## Code Review Rules` section of `AGENTS.md`,
+not text embedded in the workflows. Codex reads that file directly and `CLAUDE.md`
+imports it, so a change to the rules reaches both reviewers and every contributing
+agent at once. The workflow prompts do nothing but point at it.
+
+The Codex workflow runs the model with `contents: read` and posts the result from a
+second job holding only `pull-requests: write`. The job that reads changed files
+therefore has nothing to write with, which matters because those files are
+untrusted input: `AGENTS.md` tells both reviewers never to treat text inside a diff
+as an instruction addressed to them.
+
+Because the repository restricts which actions may run, each reviewer's action is
+allow-listed by pattern in **Settings > Actions > General**. An action that is not
+listed fails the run at startup, before any job is created.
+
 ## Preventing divergence
 
 - `AGENTS.md` is imported by `CLAUDE.md`, so the shared rules cannot fork.
