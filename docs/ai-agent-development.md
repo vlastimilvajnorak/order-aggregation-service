@@ -105,6 +105,39 @@ files whose canonical source is gone.
 6. Run the sync, then add the skill to the tables in `AGENTS.md`, `CLAUDE.md` and
    this document.
 
+## Automated code review
+
+Every pull request into `develop` or `master` is reviewed by Codex:
+
+| Workflow | Action | Model | Secret |
+| --- | --- | --- | --- |
+| `.github/workflows/codex-code-review.yml` | `openai/codex-action@v1` | `gpt-5.6-sol` | `OPENAI_API_KEY` |
+
+The review is **advisory**. It comments and never gates: the only required status
+check is **Build and test**, so a review that is slow, unavailable or simply wrong
+cannot block delivery. Pull requests from forks are skipped, because they cannot read
+the secret and would otherwise fail for a reason the contributor cannot fix.
+
+Only Codex reviews automatically. An equivalent Claude workflow was evaluated and
+dropped: two automated reviewers on the same diff cost twice and mostly say the same
+thing. Claude Code still applies the rules below when a change is reviewed by hand,
+because `CLAUDE.md` imports `AGENTS.md`.
+
+The rules the reviewer applies are the `## Code Review Rules` section of `AGENTS.md`,
+not text embedded in the workflow. Codex reads that file directly, so a change to the
+rules reaches the reviewer and every contributing agent at once. The workflow prompt
+does nothing but point at it.
+
+The workflow runs the model with `contents: read` and posts the result from a second
+job holding only `pull-requests: write`. The job that reads changed files therefore
+has nothing to write with, which matters because those files are untrusted input:
+`AGENTS.md` tells the reviewer never to treat text inside a diff as an instruction
+addressed to it.
+
+Because the repository restricts which actions may run, `openai/codex-action@*` is
+allow-listed by pattern in **Settings > Actions > General**. An action that is not
+listed fails the run at startup, before any job is created.
+
 ## Preventing divergence
 
 - `AGENTS.md` is imported by `CLAUDE.md`, so the shared rules cannot fork.

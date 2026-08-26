@@ -1,0 +1,91 @@
+name: Codex code review
+
+# Automated review of every pull request. Advisory by design: it comments, it
+# never gates. The only required check stays `Build and test` in ci.yml.
+#
+# The review rules themselves live in AGENTS.md, which Codex reads on its own.
+# Keeping them there rather than in this prompt means the rules a reviewer
+# applies and the rules a contributing agent follows cannot drift apart.
+on:
+  pull_request:
+    branches:
+      - develop
+      - master
+    types:
+      - opened
+      - synchronize
+
+# Deliberately read-only. The job that runs the model cannot write to the pull
+# request; publishing the result is a separate job below with its own, narrower
+# grant. A prompt injected through changed files therefore has nothing to spend.
+permissions:
+  contents: read
+
+concurrency:
+  group: codex-review-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    name: Codex code review
+    runs-on: ubuntu-latest
+
+    # A fork's pull request cannot read repository secrets, so the review would
+    # fail for want of an API key.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+
+    outputs:
+      final-message: ${{ steps.codex.outputs.final-message }}
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v5
+        with:
+          # The full history is what lets the reviewer diff the head against the
+          # base rather than read the merge result with no idea what changed.
+          fetch-depth: 0
+
+      - name: Review the pull request
+        id: codex
+        uses: openai/codex-action@v1
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          permission-profile: ':workspace'
+          # Sol is the most capable model on offer and the one documented for
+          # complex code changes, which is what this job is for.
+          model: gpt-5.6-sol
+          prompt: |
+            Review only the changes this pull request introduces, against
+            ${{ github.event.pull_request.base.ref }}.
+
+            Follow the Code Review Rules in AGENTS.md. docs/requirements.md is
+            the authoritative specification: where the code, the tests or the
+            README disagree with it, the document wins and the other is a defect.
+
+            Report only what you are confident about, most serious first, each
+            anchored to a file and line. Say plainly when you find nothing worth
+            raising rather than padding the review.
+
+  publish:
+    name: Publish the review
+    runs-on: ubuntu-latest
+    needs: review
+    if: needs.review.outputs.final-message != ''
+
+    # The only job with write access, and it does nothing but post text.
+    permissions:
+      pull-requests: write
+
+    steps:
+      - name: Comment on the pull request
+        uses: actions/github-script@v7
+        env:
+          REVIEW: ${{ needs.review.outputs.final-message }}
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `## Codex review\n\n${process.env.REVIEW}`,
+            })
